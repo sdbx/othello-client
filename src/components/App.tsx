@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Route } from 'react-router-dom';
 import Home from "./pages/Home";
-import OthelloGame from "./pages/OthelloGame";
+import PlayOthello from "./pages/PlayOthello";
 
 export default class App extends React.Component {
 
@@ -16,8 +16,8 @@ export default class App extends React.Component {
     render() {
         return (
             <>
-                <Route exact path='/' component={Home} />
-                <Route path='/othello' component={OthelloGame} />
+                <Route exact path='/' component={ Home } />
+                <Route path='/othello' component={ PlayOthello } />
             </>
         );
     }
