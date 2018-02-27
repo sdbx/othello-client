@@ -1,0 +1,34 @@
+{
+  "name": "othello-client",
+  "version": "0.0.1",
+  "description": "sdbx online othello client",
+  "dependencies": {
+    "@types/classnames": "^2.2.3",
+    "@types/react": "^16.0.38",
+    "@types/react-dom": "^16.0.4",
+    "@types/react-router-dom": "^4.2.4",
+    "classnames": "^2.2.5",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-router-dom": "^4.2.2"
+  },
+  "devDependencies": {
+    "node-sass": "^4.7.2",
+    "parcel-bundler": "^1.6.2",
+    "postcss-modules": "^1.1.0",
+    "typescript": "^2.7.2"
+  },
+  "scripts": {
+    "dev": "parcel src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sdbx/othello-client.git"
+  },
+  "author": "ludev",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/sdbx/othello-client/issues"
+  },
+  "homepage": "https://github.com/sdbx/othello-client#readme"
+}
