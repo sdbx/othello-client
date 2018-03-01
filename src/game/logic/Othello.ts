@@ -41,6 +41,21 @@ export default class Othello {
         return result;
     }
 
+    availableMoves(type: MarkerType): BoardPosition[] {
+        const result = [];
+
+        for (let y = 0; y < this.height; ++y) {
+            for (let x = 0; x < this.width; ++x) {
+                const position = { x: x, y: y };
+
+                if (this.isValidMove(position, type).valid)
+                    result.push(position);
+            }
+        }
+
+        return result;
+    }
+
     get history(): string {
         return this.historyData.map(position => this.convertToNotation(position)).join(' ');
     }

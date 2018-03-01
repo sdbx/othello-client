@@ -38,6 +38,8 @@ class Tile {
 
     marker:Marker;
     rect:Rect;
+    available: boolean = false;
+    hovered: boolean = false;
 
     constructor(
         private board: Board,
@@ -51,6 +53,11 @@ class Tile {
         this.rect.y = this.board.topY + this.position.y * this.board.tileSize;
         this.rect.width = this.board.tileSize;
         this.rect.height = this.board.tileSize;
+
+        if (this.available && this.hovered) {
+            context.fillStyle = 'rgba(1, 1, 1, .3)';
+            context.fillRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
+        }
 
         context.strokeStyle = 'black';
         context.strokeRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
@@ -138,6 +145,7 @@ class Board {
 
 export default class CanvasOthelloGame {
 
+    private nextAvailableMoves: BoardPosition[];
     private othello: Othello;
     private board: Board;
     private currentPlayerType: MarkerType = MarkerType.Black;
@@ -149,6 +157,7 @@ export default class CanvasOthelloGame {
         this.othello = new Othello(board8x8);
         this.context = canvas.getContext('2d');
 
+        this.handleTileMouseMove = this.handleTileMouseMove.bind(this);
         this.handleTileClick = this.handleTileClick.bind(this);
         this.handleResize = this.handleResize.bind(this);
     }
@@ -174,10 +183,21 @@ export default class CanvasOthelloGame {
 
         // event listeners
         window.addEventListener('click', this.handleTileClick);
+        window.addEventListener('mousemove', this.handleTileMouseMove);
         window.addEventListener('resize', this.handleResize, false);
         
         this.handleResize();
+        this.updateNextAvailableMoves();
         this.scheduleNextUpdate();
+    }
+
+    handleTileMouseMove(e: MouseEvent) {
+        let boundingRect = this.canvas.getBoundingClientRect();
+        let mousePoint = { x: e.clientX - boundingRect.left, y: e.clientY - boundingRect.top };
+
+        this.board.everyTile(tile => {
+            tile.hovered = tile.rect.contains(mousePoint);
+        });
     }
 
     handleTileClick(e: MouseEvent) {
@@ -194,16 +214,27 @@ export default class CanvasOthelloGame {
                 this.board.put(tile.position, this.currentPlayerType);
                 for (let position of delta)
                     this.board.flip(position);
-
-                this.currentPlayerType = Othello.oppositeType(this.currentPlayerType);
             }
         });
+
+        this.currentPlayerType = Othello.oppositeType(this.currentPlayerType);
+        this.updateNextAvailableMoves();
     }
 
     handleResize() {
         this.canvas.width = this.canvas.parentElement.clientWidth;
         this.canvas.height = this.canvas.parentElement.clientHeight;
         this.board.resize(this.canvas.width, this.canvas.height);
+    }
+
+    updateNextAvailableMoves() {
+        this.board.everyTile(tile => tile.available = false);
+
+        this.nextAvailableMoves = this.othello.availableMoves(this.currentPlayerType);
+
+        for (let move of this.nextAvailableMoves) {
+            this.board.tileAt(move).available = true;
+        }
     }
 
     destroy() {
