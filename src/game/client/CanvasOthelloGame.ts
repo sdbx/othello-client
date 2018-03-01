@@ -214,11 +214,11 @@ export default class CanvasOthelloGame {
                 this.board.put(tile.position, this.currentPlayerType);
                 for (let position of delta)
                     this.board.flip(position);
+
+                this.currentPlayerType = Othello.oppositeType(this.currentPlayerType);
+                this.updateNextAvailableMoves();
             }
         });
-
-        this.currentPlayerType = Othello.oppositeType(this.currentPlayerType);
-        this.updateNextAvailableMoves();
     }
 
     handleResize() {
