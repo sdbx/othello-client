@@ -80,6 +80,9 @@ export default class Othello {
     }
 
     private isValidMove(at: BoardPosition, type: MarkerType): { valid: boolean, delta?: BoardPosition[] } {
+        if (this.at(at) != MarkerType.None)
+            return { valid: false };
+
         let markersInMiddle = [];
 
         for (let dy = -1; dy <= 1; ++dy) {
