@@ -1,4 +1,4 @@
-import { MarkerType } from "./consts";
+import { MarkerType } from './consts';
 import * as Consts from './consts';
 
 export interface BoardPosition {
@@ -7,12 +7,6 @@ export interface BoardPosition {
 }
 
 export default class Othello {
-
-    private historyData: BoardPosition[] = [];
-
-    constructor(public readonly board: MarkerType[][]) {
-    }
-
     static oppositeType(type: MarkerType): MarkerType {
         switch (type) {
             case MarkerType.Black:
@@ -23,32 +17,37 @@ export default class Othello {
     }
 
     static parseOne(notation: string): { valid: boolean, position?: BoardPosition } {
-        if (notation == Consts.notationPass) {
+        if (notation === Consts.notationPass) {
             return { valid: true, position: Consts.boardPositionPass };
         }
 
-        let result = notation.match(/^([a-z]{1})([0-9]{1,2})$/);
+        const result = notation.match(/^([a-z]{1})([0-9]{1,2})$/);
         if (result) {
-            let x: number = result[1].charCodeAt(0) - 'a'.charCodeAt(0);
-            let y: number = parseInt(result[2]) - 1;
+            const x: number = result[1].charCodeAt(0) - 'a'.charCodeAt(0);
+            const y: number = parseInt(result[2], 10) - 1;
 
-            return { valid: true, position: { x: x, y: y } };
-        }
-        else {
+            return { valid: true, position: { x, y } };
+        } else {
             return { valid: false };
         }
     }
 
     static convertToNotation(position: BoardPosition): string {
-        if (Othello.isPass(position))
+        if (Othello.isPass(position)) {
             return '--';
-        else
+        } else {
             return String.fromCharCode(position.x + 'a'.charCodeAt(0)) + (position.y + 1);
+        }
     }
 
     static isPass(position: BoardPosition): boolean {
         console.log(position);
-        return position.x == Consts.boardPositionPass.x && position.y == Consts.boardPositionPass.y;
+        return position.x === Consts.boardPositionPass.x && position.y === Consts.boardPositionPass.y;
+    }
+
+    private historyData: BoardPosition[] = [];
+
+    constructor(public readonly board: MarkerType[][]) {
     }
 
     at(position: BoardPosition): MarkerType {
@@ -58,15 +57,15 @@ export default class Othello {
     put(at: BoardPosition, type: MarkerType): { valid: boolean, delta?: BoardPosition[] } {
         if (Othello.isPass(at)) {
             this.historyData.push(Consts.boardPositionPass);
-            return { valid:true, delta: [] }
+            return { valid: true, delta: [] };
         }
 
         const result = this.isValidMove(at, type);
 
         if (result.valid) {
             this.set(at, type);
-            
-            for (let position of result.delta) {
+
+            for (const position of result.delta) {
                 this.set(position, type);
             }
 
@@ -81,10 +80,11 @@ export default class Othello {
 
         for (let y = 0; y < this.height; ++y) {
             for (let x = 0; x < this.width; ++x) {
-                const position = { x: x, y: y };
+                const position = { x, y };
 
-                if (this.isValidMove(position, type).valid)
+                if (this.isValidMove(position, type).valid) {
                     result.push(position);
+                }
             }
         }
 
@@ -92,7 +92,7 @@ export default class Othello {
     }
 
     get history(): string {
-        return this.historyData.map(position => Othello.convertToNotation(position)).join(' ');
+        return this.historyData.map((position) => Othello.convertToNotation(position)).join(' ');
     }
 
     get width(): number {
@@ -108,36 +108,41 @@ export default class Othello {
     }
 
     private isValidMove(at: BoardPosition, type: MarkerType): { valid: boolean, delta?: BoardPosition[] } {
-        if (this.at(at) != MarkerType.None)
+        if (this.at(at) !== MarkerType.None) {
             return { valid: false };
+        }
 
         let markersInMiddle = [];
 
         for (let dy = -1; dy <= 1; ++dy) {
             for (let dx = -1; dx <= 1; ++dx) {
-                if (dx == 0 && dy == 0) continue;
-                
+                if (dx === 0 && dy === 0) {
+                    continue;
+                }
                 markersInMiddle = markersInMiddle.concat(this.checkDirection(at, type, dx, dy));
             }
         }
 
-        if (markersInMiddle.length > 0)
+        if (markersInMiddle.length > 0) {
             return { valid: true, delta: markersInMiddle };
-        
+        }
+
         return { valid: false };
     }
 
     private checkDirection(at: BoardPosition, type: MarkerType, dx: number, dy: number): BoardPosition[] {
-        let cursor = { x: at.x + dx, y: at.y + dy };
-        let markersInMiddle = [];
+        const cursor = { x: at.x + dx, y: at.y + dy };
+        const markersInMiddle = [];
 
         while (this.isInBoard(cursor)) {
-            let cursorType = this.at(cursor);
+            const cursorType = this.at(cursor);
 
-            if (cursorType == MarkerType.None)
+            if (cursorType === MarkerType.None) {
                 break;
-            if (cursorType == type)
+            }
+            if (cursorType === type) {
                 return markersInMiddle;
+            }
 
             markersInMiddle.push({ ...cursor });
             cursor.x += dx;

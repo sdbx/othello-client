@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as styles from './PlayOthello.scss';
-import CanvasOthelloGame from '../../game/client/CanvasOthelloGame';
+import CanvasOthelloGame from '../../game/client/canvasGame/CanvasOthelloGame';
 import NetworkClient from '../../game/client/NetworkClient';
 
 export default class PlayOthello extends React.Component {
@@ -18,12 +18,12 @@ export default class PlayOthello extends React.Component {
 
         this.client.login(userName);
         this.client.enterRoom(roomName)
-        .then(data => {
+        .then((data) => {
             this.game.init(userName, data);
-            this.game.tryPut = p => this.client.put(p);
-            this.client.onPut = p => this.game.put(p);
+            this.game.tryPut = (position) => this.client.put(position);
+            this.client.onPut = (position) => this.game.put(position);
         })
-        .catch(err => console.error(err));
+        .catch((err) => console.error(err));
     }
 
     componentWillUnmount() {
@@ -33,11 +33,11 @@ export default class PlayOthello extends React.Component {
 
     render() {
         return (
-            <div className={styles['page']}>
-                <canvas ref={ c => this.canvas = c }>
+            <div className={ styles['page'] }>
+                <canvas ref={ (c) => this.canvas = c }>
                     캔버스를 지원하지 않는 브라우저입니다.
                 </canvas>
             </div>
-        )
+        );
     }
 }
