@@ -1,19 +1,34 @@
 import * as React from 'react';
-import CanvasOthelloGame from '../../game/client/CanvasOthelloGame';
 import * as styles from './PlayOthello.scss';
+import CanvasOthelloGame from '../../game/client/CanvasOthelloGame';
+import NetworkClient from '../../game/client/NetworkClient';
 
 export default class PlayOthello extends React.Component {
 
     canvas: HTMLCanvasElement;
+    client: NetworkClient;
     game: CanvasOthelloGame;
 
     componentDidMount() {
+        this.client = new NetworkClient();
         this.game = new CanvasOthelloGame(this.canvas);
-        this.game.init();
+
+        const roomName = 'testgame2';
+        const userName = prompt('사용자 이름');
+
+        this.client.login(userName);
+        this.client.enterRoom(roomName)
+        .then(data => {
+            this.game.init(userName, data);
+            this.game.tryPut = p => this.client.put(p);
+            this.client.onPut = p => this.game.put(p);
+        })
+        .catch(err => console.error(err));
     }
 
     componentWillUnmount() {
         this.game.destroy();
+        this.client.clear();
     }
 
     render() {

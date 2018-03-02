@@ -2,6 +2,8 @@ import Othello, { BoardPosition } from "../logic/Othello";
 import Point from "./geom/Point";
 import Rect from "./geom/Rect";
 import { MarkerType, board8x8 } from "../logic/consts";
+import axios from 'axios';
+import NetworkClient from "./NetworkClient";
 
 class Marker {
 
@@ -27,7 +29,7 @@ class Marker {
         context.arc(
             this.board.topX + this.tile.position.x * this.board.tileSize + this.board.tileSize / 2,
             this.board.topY + this.tile.position.y * this.board.tileSize + this.board.tileSize / 2,
-            this.board.tileSize / 2 - 5,
+            Math.max(this.board.tileSize / 2 - 5, 1),
             0, 2 * Math.PI
         );
         context.fill();
@@ -54,7 +56,7 @@ class Tile {
         this.rect.width = this.board.tileSize;
         this.rect.height = this.board.tileSize;
 
-        if (this.available && this.hovered) {
+        if (this.board.game.isMyTurn() && this.available && this.hovered) {
             context.fillStyle = 'rgba(1, 1, 1, .3)';
             context.fillRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
         }
@@ -78,6 +80,7 @@ class Board {
     private rect: Rect = new Rect();
 
     constructor(
+        public game: CanvasOthelloGame,
         public column: number,
         public row: number
     ) {
@@ -143,31 +146,47 @@ class Board {
     }
 }
 
+interface InitialData {
+    black: string;
+    white: string;
+    board: MarkerType[][];
+    history: string[];
+}
+
 export default class CanvasOthelloGame {
+
+    tryPut: (position: BoardPosition) => void;
 
     private nextAvailableMoves: BoardPosition[];
     private othello: Othello;
     private board: Board;
     private currentPlayerType: MarkerType = MarkerType.Black;
+    private myType: MarkerType;
 
     private raqId: number;
     private context: CanvasRenderingContext2D;
 
     constructor(private canvas: HTMLCanvasElement) {
-        this.othello = new Othello(board8x8);
         this.context = canvas.getContext('2d');
-
-        this.handleTileMouseMove = this.handleTileMouseMove.bind(this);
-        this.handleTileClick = this.handleTileClick.bind(this);
-        this.handleResize = this.handleResize.bind(this);
     }
 
     scheduleNextUpdate() {
         this.raqId = requestAnimationFrame(() => this.run());
     }
 
-    init() {
-        this.board = new Board(this.othello.width, this.othello.height);
+    init(playerName: string, data: InitialData) {
+        this.othello = new Othello(data.board);
+        this.board = new Board(this, this.othello.width, this.othello.height);
+
+        this.currentPlayerType = (data.history.length % 2 == 0) ? MarkerType.Black : MarkerType.White;
+        this.myType = (data.black == playerName) ? MarkerType.Black : MarkerType.White;
+
+        console.log('현재 턴 플레이어 색:', this.currentPlayerType);
+        console.log('내 색:', this.myType);
+
+        this.handleTileMouseMove = this.handleTileMouseMove.bind(this);
+        this.handleTileClick = this.handleTileClick.bind(this);
+        this.handleResize = this.handleResize.bind(this);
         
         for (let y = 0; y < this.board.row; ++y) {
             for (let x = 0; x < this.board.column; ++x) {
@@ -191,6 +210,30 @@ export default class CanvasOthelloGame {
         this.scheduleNextUpdate();
     }
 
+    put(position: BoardPosition) {
+        if ( !Othello.isPass(position)) {
+            let { valid, delta } = this.othello.put(position, this.currentPlayerType);
+
+            console.log('CanvasOthelloGame.put:', position);
+
+            if (!valid)
+                return;
+
+            console.log('유효함:', position);
+
+            this.board.put(position, this.currentPlayerType);
+            for (let position of delta)
+                this.board.flip(position);
+        }
+
+        this.currentPlayerType = Othello.oppositeType(this.currentPlayerType);
+        this.updateNextAvailableMoves();
+    }
+
+    isMyTurn(): boolean {
+        return this.currentPlayerType == this.myType;
+    }
+
     handleTileMouseMove(e: MouseEvent) {
         let boundingRect = this.canvas.getBoundingClientRect();
         let mousePoint = { x: e.clientX - boundingRect.left, y: e.clientY - boundingRect.top };
@@ -201,22 +244,15 @@ export default class CanvasOthelloGame {
     }
 
     handleTileClick(e: MouseEvent) {
+        if (!this.isMyTurn())
+            return
+
         let boundingRect = this.canvas.getBoundingClientRect();
         let mousePoint = { x: e.clientX - boundingRect.left, y: e.clientY - boundingRect.top };
         
         this.board.everyTile(tile => {
             if (tile.rect.contains(mousePoint) && tile.marker == undefined) {
-                let { valid, delta } = this.othello.put(tile.position, this.currentPlayerType);
-
-                if (!valid)
-                    return;
-
-                this.board.put(tile.position, this.currentPlayerType);
-                for (let position of delta)
-                    this.board.flip(position);
-
-                this.currentPlayerType = Othello.oppositeType(this.currentPlayerType);
-                this.updateNextAvailableMoves();
+                this.tryPut(tile.position);
             }
         });
     }

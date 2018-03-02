@@ -14,3 +14,6 @@ export const board8x8 = [
     [2, 2, 2, 2, 2, 2, 2, 2],
     [2, 2, 2, 2, 2, 2, 2, 2]
 ];
+
+export const boardPositionPass = { x: -1, y: -1 };
+export const notationPass = '--';

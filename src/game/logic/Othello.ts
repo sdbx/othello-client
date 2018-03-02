@@ -1,4 +1,5 @@
 import { MarkerType } from "./consts";
+import * as Consts from './consts';
 
 export interface BoardPosition {
     x: number;
@@ -21,11 +22,45 @@ export default class Othello {
         }
     }
 
+    static parseOne(notation: string): { valid: boolean, position?: BoardPosition } {
+        if (notation == Consts.notationPass) {
+            return { valid: true, position: Consts.boardPositionPass };
+        }
+
+        let result = notation.match(/^([a-z]{1})([0-9]{1,2})$/);
+        if (result) {
+            let x: number = result[1].charCodeAt(0) - 'a'.charCodeAt(0);
+            let y: number = parseInt(result[2]) - 1;
+
+            return { valid: true, position: { x: x, y: y } };
+        }
+        else {
+            return { valid: false };
+        }
+    }
+
+    static convertToNotation(position: BoardPosition): string {
+        if (Othello.isPass(position))
+            return '--';
+        else
+            return String.fromCharCode(position.x + 'a'.charCodeAt(0)) + (position.y + 1);
+    }
+
+    static isPass(position: BoardPosition): boolean {
+        console.log(position);
+        return position.x == Consts.boardPositionPass.x && position.y == Consts.boardPositionPass.y;
+    }
+
     at(position: BoardPosition): MarkerType {
         return this.board[position.y][position.x];
     }
 
     put(at: BoardPosition, type: MarkerType): { valid: boolean, delta?: BoardPosition[] } {
+        if (Othello.isPass(at)) {
+            this.historyData.push(Consts.boardPositionPass);
+            return { valid:true, delta: [] }
+        }
+
         const result = this.isValidMove(at, type);
 
         if (result.valid) {
@@ -57,7 +92,7 @@ export default class Othello {
     }
 
     get history(): string {
-        return this.historyData.map(position => this.convertToNotation(position)).join(' ');
+        return this.historyData.map(position => Othello.convertToNotation(position)).join(' ');
     }
 
     get width(): number {
@@ -66,13 +101,6 @@ export default class Othello {
 
     get height(): number {
         return this.board.length;
-    }
-
-    private convertToNotation(position: BoardPosition): string {
-        if (position)
-            return String.fromCharCode(position.x + 'a'.charCodeAt(0)) + (position.y + 1);
-        
-        return '--';
     }
 
     private set(at: BoardPosition, type: MarkerType): void {
